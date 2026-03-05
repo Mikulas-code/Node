@@ -1,2 +1,0 @@
-vstup.txt
-vystup.txt
