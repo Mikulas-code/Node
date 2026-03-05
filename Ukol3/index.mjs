@@ -9,25 +9,27 @@ async function read(){
 
     }catch(err){
         console.error('Jejda');
+        return 0;
     }
 }
 
 async function createFiles(){
     const numberOfFiles = await read();
-    console.log(numberOfFiles);
+    let array = []
     for(let i = 0; i < numberOfFiles; i++){
-        try{
             let fileName = i+'.txt';
             let fileText = 'Soubor '+ i;
-            await fs.writeFile(fileName,fileText);
-            if(i === numberOfFiles){
-                console.log("Soubory vytvořeny")
-            }
-
-        }catch(err){
-            console.error('Jejda');
+            let promise = fs.writeFile(fileName,fileText);
+            array.push(promise);
+    }
+    try {
+        if(array.length !==0){
+            await Promise.all(array);
+        console.log("Soubory vytvořeny");
         }
+    } catch (error) {
+        console.log('Chyba')
     }
 
 }
-createFiles();
+await createFiles();
