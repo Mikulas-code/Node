@@ -1,43 +1,39 @@
 import chalk from 'chalk';
 import http, { request } from 'http';
 import fs from 'fs/promises';
+import { error } from 'console';
 
-const readHtml = async (fileName) => {
+const readHtml = async (path) => {
   await new Promise((resolve) => setTimeout(resolve, 2000))
-  const data = await fs.readFile(fileName)
+  const data = await fs.readFile(path)
   const html = data.toString()
   return html
-}
- 
 
+}
 
 const server = http.createServer(async (request, response)=>{
-    console.log(request.url);
 
-    const path = request.url;
-    const parts = path.split('/')
+  try{
+
+    const URLPath = request.url;
+    const parts = URLPath.split('/')
     console.log(parts[1]);
-    const fileName = parts[1].toString(); 
-
-    const html = await readHtml(fileName);
+    const fileName = parts[1].toString();
+    const path = './public/'+fileName;
+    const html = await readHtml(path);
     console.log(html);
+    response.statusCode = 200;
+    response.setHeader('Content-Type', 'text/html')
+    response.write(html)
     response.end();
 
-
-    // if(request.url === '/test'){
-
-    // const html = await readHtml('public/test.txt');
-    // response.statusCode = 200;
-    // response.setHeader('Content-Type', 'text/html')
-    // response.setHeader('Location', '/test')
-    // response.write(html)
-    // response.end();
-    // } else{
-    // response.statusCode = 200;
-    // response.setHeader('Content-Type', 'text/html')
-    // response.write('<h1>File not found</h1>');
-    // response.end();
-    // }
+  }catch(err){
+    console.log(err);
+    response.statusCode = 200;
+    response.setHeader('Content-Type', 'text/html')
+    response.write('<h1>Soubor nebyl nalezen</>');
+    response.end();
+  }
 });
 
 
