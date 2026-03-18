@@ -1,46 +1,87 @@
-import chalk from 'chalk';
-import http, { request } from 'http';
-import fs from 'fs/promises';
-import { error } from 'console';
+import { Hono } from 'hono'
+import { serve } from '@hono/node-server'
+import fs from 'fs/promises'
+import ejs from 'ejs';
 
-const readHtml = async (path) => {
-  await new Promise((resolve) => setTimeout(resolve, 2000))
-  const data = await fs.readFile(path)
-  const html = data.toString()
-  return html
 
-}
+const app = new Hono()
 
-const server = http.createServer(async (request, response)=>{
-
-  try{
-
-    const URLPath = request.url;
-    const parts = URLPath.split('/')
-    console.log(parts[1]);
-    const fileName = parts[1].toString();
-    const path = './public/'+fileName;
-    const html = await readHtml(path);
-    console.log(html);
-    response.statusCode = 200;
-    response.setHeader('Content-Type', 'text/html')
-    response.write(html)
-    response.end();
-
-  }catch(err){
-    console.log(err);
-    response.statusCode = 200;
-    response.setHeader('Content-Type', 'text/html')
-    response.write('<h1>Soubor nebyl nalezen</>');
-    response.end();
+let todos = [
+  {
+    id: 1,
+    title: "Pivko",
+    done: false
+  },
+  {
+    id: 2,
+    title: "Učite se",
+    done: false
   }
-});
+];
 
 
-server.listen(8080,'localhost', () =>{
-console.log(chalk.red('Server started on http://localhost:8080'));
-});
 
- 
+app.get(async (c, next) => {
+  console.log(c.req.method, c.req.url)
+  await next()
+})
+
+app.get('/', async (c) => {
+  const html = await ejs.renderFile('views/index.html', {
+    name: 'Marek',
+    todos,
+  });
+  return c.html(html);
+})
+
+app.post('/add-todo', async (c)=> {
+  const body = await c.req.formData();
+
+  const title = body.get('title');
+
+  todos.push({
+    id: todos.length + 1,
+    title: title,
+    done: false
+  })
+  return c.redirect('/');
+  }
+);
+
+app.get('remove-todo/:id', async (c) =>{
+  const id = Number(c.req.param('id'));
+  todos = todos.filter((todo) => todo.id !== id)
+  return c.redirect('/')
+})
 
 
+app.get('/toggle-todo/:id', async (c) => {
+  const id = Number(c.req.param('id'))
+
+  const todo = todos.find((todo) => todo.id === id)
+  todo.done = !todo.done
+
+  return c.redirect('/')
+})
+
+
+
+
+
+
+
+
+app.get('/hello/:name', async (c) => {
+  const name = c.req.param('name')
+  return c.html(`<h1>Hello, ${name}</h1>`)
+})
+
+app.use( async (c) => {
+  c.status(404)
+  return c.html('<h1>Page not found!</h1>')
+})
+
+serve({
+  fetch: app.fetch,
+  port: 8000,
+})
