@@ -68,6 +68,11 @@ app.get('/toggle-todo/:id', async (c) => {
 app.get(`/todo/:id`, async (c) => {
   const id = Number(c.req.param('id'));
   const selectedTodo = todos.find((todo) => todo.id === id);
+
+  if (!selectedTodo){
+    return c.notFound();
+  }
+
   const html = await ejs.renderFile('views/todoDetail.html', {
     todo: selectedTodo
   });
@@ -99,6 +104,12 @@ app.use( async (c) => {
   c.status(404)
   return c.html('<h1>Page not found!</h1>')
 })
+
+
+app.notFound(async (c) =>{
+return c.html('<h1>Page not found!</h1>')
+}
+);
 
 serve({
   fetch: app.fetch,
