@@ -1,17 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
+
 <body>
-    <h1>Nazdar! <%= name %>, dnes tě čeká: </h1>
-    <ul>
-      <% for (const todo of todos) { %>
-      <li>
-        <a href="/todo/<%= todo.id %>"><%= todo.title %></a>
-        <% if (todo.done) { %>
+    <h1>Detail úkolu</h1>
+    <p>Název: <%= todo.title %>
+
+        <form method="post" action="/rename-todo/<%= todo.id %>">
+        <input name="newTitle"/>
+        <button type="submit">Přejmenovat</button>
+    </form>
+    </p>
+    <p>Stav: <%= todo.done ? 'Hotovo' : 'Nerozděláno' %>
+    </p>
+
+
+
+     <% if (todo.done) { %>
           <ul>
             <li>
               <a href="/toggle-todo/<%= todo.id %>">označit jako nehotové</a>
@@ -27,13 +37,9 @@
             </li>
           </ul>
         <% } %>
-      </li>
-      <% } %>
-    </ul>
 
-    <form method="post" action="/add-todo">
-        <input name="title"/>
-        <button type="submit">Přidat</button>
-    </form>
+
+    <a href="/">Zpět na seznam</a>
 </body>
+
 </html>

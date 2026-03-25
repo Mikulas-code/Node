@@ -20,7 +20,6 @@ let todos = [
 ];
 
 
-
 app.get(async (c, next) => {
   console.log(c.req.method, c.req.url)
   await next()
@@ -28,7 +27,7 @@ app.get(async (c, next) => {
 
 app.get('/', async (c) => {
   const html = await ejs.renderFile('views/index.html', {
-    name: 'Marek',
+    name: 'Mikeš',
     todos,
   });
   return c.html(html);
@@ -48,7 +47,7 @@ app.post('/add-todo', async (c)=> {
   }
 );
 
-app.get('remove-todo/:id', async (c) =>{
+app.get('/remove-todo/:id', async (c) =>{
   const id = Number(c.req.param('id'));
   todos = todos.filter((todo) => todo.id !== id)
   return c.redirect('/')
@@ -61,12 +60,32 @@ app.get('/toggle-todo/:id', async (c) => {
   const todo = todos.find((todo) => todo.id === id)
   todo.done = !todo.done
 
-  return c.redirect('/')
+  const referer = c.req.header('Referer')
+
+  return c.redirect(referer || '/');
 })
 
+app.get(`/todo/:id`, async (c) => {
+  const id = Number(c.req.param('id'));
+  const selectedTodo = todos.find((todo) => todo.id === id);
+  const html = await ejs.renderFile('views/todoDetail.html', {
+    todo: selectedTodo
+  });
+  return c.html(html);
+})
 
+app.post('/rename-todo/:id', async (c)=> {
+  const body = await c.req.formData();
 
+  const newTitle = body.get('newTitle');
+  const id = Number(c.req.param('id'));
+  const todo = todos.find((todo) => todo.id === id);
+  todo.title = newTitle;
+  const referer = c.req.header('Referer')
 
+  return c.redirect(referer || '/');
+  }
+);
 
 
 
