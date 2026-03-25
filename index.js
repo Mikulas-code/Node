@@ -2,23 +2,21 @@ import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
 import fs from 'fs/promises'
 import ejs from 'ejs';
+import { drizzle } from "drizzle-orm/libsql"
+import { todosTable } from './src/schema.js';
+import { eq } from 'drizzle-orm';
+// DATABAZE
+
+const db = drizzle({
+  connection: "file:db.sqlite",
+  logger: true,
+})
+
+
+
 
 
 const app = new Hono()
-
-let todos = [
-  {
-    id: 1,
-    title: "Pivko",
-    done: false
-  },
-  {
-    id: 2,
-    title: "Učite se",
-    done: false
-  }
-];
-
 
 app.get(async (c, next) => {
   console.log(c.req.method, c.req.url)
@@ -26,6 +24,8 @@ app.get(async (c, next) => {
 })
 
 app.get('/', async (c) => {
+
+  const todos = await db.select().from(todosTable).all();
   const html = await ejs.renderFile('views/index.html', {
     name: 'Mikeš',
     todos,
@@ -38,11 +38,11 @@ app.post('/add-todo', async (c)=> {
 
   const title = body.get('title');
 
-  todos.push({
-    id: todos.length + 1,
+  await db.insert(todosTable).values({
     title: title,
     done: false
   })
+
   return c.redirect('/');
   }
 );
@@ -57,8 +57,11 @@ app.get('/remove-todo/:id', async (c) =>{
 app.get('/toggle-todo/:id', async (c) => {
   const id = Number(c.req.param('id'))
 
-  const todo = todos.find((todo) => todo.id === id)
-  todo.done = !todo.done
+  const todo = await db.select().from(todosTable).where(eq(todosTable.id, id)).get();
+
+  await db.update(todosTable).set({
+    done: !todo.done
+  }).where(eq(todosTable.id, id));
 
   const referer = c.req.header('Referer')
 
