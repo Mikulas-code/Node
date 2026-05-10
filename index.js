@@ -205,3 +205,7 @@ const utils = {
     }
   },
 }
+
+export function ukazkovaMetoda(){
+return 1;
+}
