@@ -1,11 +1,11 @@
-// drizzle.coonfig.js
+// drizzle.config.js
 
-import { defineConfig } from "drizzle-kit"
+import { defineConfig } from 'drizzle-kit'
 
 export default defineConfig({
-  dialect: "sqlite",
-  schema: "./src/schema.js",
+  dialect: 'sqlite',
+  schema: './src/schema.js',
   dbCredentials: {
-    url: "file:db.sqlite",
+    url: 'file:db.sqlite',
   },
 })

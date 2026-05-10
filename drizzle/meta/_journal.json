@@ -5,8 +5,15 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1774460094226,
-      "tag": "0000_closed_red_skull",
+      "when": 1774459868329,
+      "tag": "0000_bitter_vanisher",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1778415626288,
+      "tag": "0001_normal_true_believers",
       "breakpoints": true
     }
   ]
