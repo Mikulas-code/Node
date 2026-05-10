@@ -63,7 +63,7 @@ app.get('/todo/:id', async (c, next) => {
 
   if (!todo) return await next()
 
-  const html = ejs.renderFile('views/todo-detail.html', {
+  const html = await ejs.renderFile('views/todo-detail.html', {
     todo,
     utils,
   })
@@ -93,6 +93,7 @@ app.get('/remove-todo/:id', async (c) => {
   await db.delete(todosTable).where(eq(todosTable.id, id))
 
   sendTodosToAllWebsockets()
+  sendTodoDetailToAllWebsockets(id);
 
   return c.redirect('/')
 })
@@ -105,6 +106,7 @@ app.get('/toggle-todo/:id', async (c) => {
   await db.update(todosTable).set({ done: !todo.done }).where(eq(todosTable.id, id))
 
   sendTodosToAllWebsockets()
+  sendTodoDetailToAllWebsockets(id);
 
   return redirectBack(c, '/')
 })
@@ -131,6 +133,34 @@ const sendTodosToAllWebsockets = async () => {
   }
 }
 
+const sendTodoDetailToAllWebsockets = async (id) => {
+  try {
+    const todo = await db.select().from(todosTable).where(eq(todosTable.id, id)).get();
+
+    if (!todo) {
+      // Bonus: Pokud todo v DB není, pošleme info o smazání
+      for (const ws of webSockets) {
+        ws.send(JSON.stringify({ type: 'todo-deleted', id }));
+      }
+      return;
+    }
+
+    // Vyrenderujeme obsah detailu (můžeš použít stejnou šablonu nebo partial)
+    const html = await ejs.renderFile('views/todo-detail.html', { todo, utils });
+    // TIP: Pokud chceš měnit jen vnitřek, vyrenderuj jen ten, ale pro začátek stačí i tohle.
+
+    for (const ws of webSockets) {
+      ws.send(JSON.stringify({
+        type: 'todo-detail',
+        id: todo.id,
+        html: html
+      }));
+    }
+  } catch (e) {
+    console.error("WS detail error:", e);
+  }
+};
+
 app.post('/update-todo/:id', async (c) => {
   const id = Number(c.req.param('id'))
   const body = await c.req.formData()
@@ -138,6 +168,7 @@ app.post('/update-todo/:id', async (c) => {
   const priority = body.get('priority')
 
   await db.update(todosTable).set({ title, priority }).where(eq(todosTable.id, id))
+  sendTodoDetailToAllWebsockets(id);
 
   return redirectBack(c, '/')
 })
